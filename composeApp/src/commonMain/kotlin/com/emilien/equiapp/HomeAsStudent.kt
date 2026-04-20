@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,10 +28,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+
+import com.emilien.equiapp.home.NewsViewModel
+import com.emilien.equiapp.home.UpcomingCoursesViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeAsStudent(
     horseryName: String = "Galop des Allinges",
+    newsViewModel: NewsViewModel = viewModel { NewsViewModel() },
+    coursesViewModel: UpcomingCoursesViewModel = viewModel { UpcomingCoursesViewModel() },
     onNavigateToProfile: () -> Unit = {},
     onNavigateToCourses: () -> Unit = {},
     onNavigateToHorses: () -> Unit = {},
@@ -38,6 +47,9 @@ fun HomeAsStudent(
     onNavigateToParameters: () -> Unit = {},
     onNavigateToCourseDetail: (String) -> Unit = {}
 ) {
+    val newsUiState by newsViewModel.uiState.collectAsStateWithLifecycle()
+    val coursesUiState by coursesViewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -149,7 +161,16 @@ fun HomeAsStudent(
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    NextCoursesList(onCourseClick = onNavigateToCourseDetail)
+                    if (coursesUiState.isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.padding(horizontal = 16.dp))
+                    } else if (coursesUiState.error != null) {
+                        Text(coursesUiState.error!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp))
+                    } else {
+                        NextCoursesList(
+                            courses = coursesUiState.courses,
+                            onCourseClick = onNavigateToCourseDetail
+                        )
+                    }
                 }
             }
 
@@ -161,7 +182,14 @@ fun HomeAsStudent(
                         icon = Icons.AutoMirrored.Filled.KeyboardArrowRight
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    NewsFeed()
+                    
+                    if (newsUiState.isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    } else if (newsUiState.error != null) {
+                        Text("Failed to load news", color = MaterialTheme.colorScheme.error)
+                    } else {
+                        NewsFeed(newsUiState.news)
+                    }
                 }
             }
         }
@@ -303,15 +331,13 @@ fun SectionHeader(title: String, onSeeAllClick: () -> Unit, icon: ImageVector) {
 }
 
 @Composable
-fun NextCoursesList(onCourseClick: (String) -> Unit = {}) {
-    val courses = listOf(
-        CourseMock("1", "Jumping Level 2", "Tomorrow, 10:00", "Main Arena", Icons.AutoMirrored.Filled.TrendingUp),
-        CourseMock("2", "Basic Dressage", "Wed, 14:00", "Indoor Ring", Icons.Default.AutoGraph)
-    )
-
+fun NextCoursesList(
+    courses: List<CourseMock>,
+    onCourseClick: (String) -> Unit = {}
+) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(end = 16.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
         items(courses) { course ->
             ElevatedCard(
@@ -380,13 +406,7 @@ fun NextCoursesList(onCourseClick: (String) -> Unit = {}) {
 }
 
 @Composable
-fun NewsFeed() {
-    val news = listOf(
-        NewsMock("Thunder is here!", "Our new jumping star has arrived in the stables.", "2h ago", Icons.Default.NewReleases),
-        NewsMock("Regional Results", "Check out the podium of last weekend!", "1d ago", Icons.Default.EmojiEvents),
-        NewsMock("Maintenance", "The main arena will be closed on Friday morning.", "2d ago", Icons.Default.Warning)
-    )
-
+fun NewsFeed(news: List<NewsMock>) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         news.forEach { item ->
             OutlinedCard(
