@@ -8,3 +8,4 @@ data object Courses
 data object Horses
 data object Horsery
 data object Parameters
+data class CourseDetail(val courseId: String)

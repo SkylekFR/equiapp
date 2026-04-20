@@ -35,7 +35,8 @@ fun HomeAsStudent(
     onNavigateToCourses: () -> Unit = {},
     onNavigateToHorses: () -> Unit = {},
     onNavigateToHorsery: () -> Unit = {},
-    onNavigateToParameters: () -> Unit = {}
+    onNavigateToParameters: () -> Unit = {},
+    onNavigateToCourseDetail: (String) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -148,7 +149,7 @@ fun HomeAsStudent(
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    NextCoursesList()
+                    NextCoursesList(onCourseClick = onNavigateToCourseDetail)
                 }
             }
 
@@ -302,10 +303,10 @@ fun SectionHeader(title: String, onSeeAllClick: () -> Unit, icon: ImageVector) {
 }
 
 @Composable
-fun NextCoursesList() {
+fun NextCoursesList(onCourseClick: (String) -> Unit = {}) {
     val courses = listOf(
-        CourseMock("Jumping Level 2", "Tomorrow, 10:00", "Main Arena", Icons.AutoMirrored.Filled.TrendingUp),
-        CourseMock("Basic Dressage", "Wed, 14:00", "Indoor Ring", Icons.Default.AutoGraph)
+        CourseMock("1", "Jumping Level 2", "Tomorrow, 10:00", "Main Arena", Icons.AutoMirrored.Filled.TrendingUp),
+        CourseMock("2", "Basic Dressage", "Wed, 14:00", "Indoor Ring", Icons.Default.AutoGraph)
     )
 
     LazyRow(
@@ -314,7 +315,7 @@ fun NextCoursesList() {
     ) {
         items(courses) { course ->
             ElevatedCard(
-                modifier = Modifier.width(240.dp),
+                modifier = Modifier.width(240.dp).clickable { onCourseClick(course.id) },
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.elevatedCardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -440,7 +441,7 @@ fun NewsFeed() {
     }
 }
 
-data class CourseMock(val title: String, val time: String, val location: String, val icon: ImageVector)
+data class CourseMock(val id: String, val title: String, val time: String, val location: String, val icon: ImageVector)
 data class NewsMock(val title: String, val content: String, val date: String, val icon: ImageVector)
 
 @Preview
