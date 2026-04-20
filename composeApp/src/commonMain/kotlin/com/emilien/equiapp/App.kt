@@ -1,7 +1,10 @@
 package com.emilien.equiapp
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
@@ -11,7 +14,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
+    EquiAppTheme {
         val backStack = remember { mutableStateListOf<Any>(Login) }
         NavDisplay(
             backStack = backStack,
@@ -32,12 +35,38 @@ fun App() {
                     }
 
                     is HomeAsStudent -> NavEntry(key) {
-                        HomeAsStudent()
+                        HomeAsStudent(
+                            onNavigateToProfile = { backStack.add(Profile) },
+                            onNavigateToCourses = { backStack.add(Courses) },
+                            onNavigateToHorses = { backStack.add(Horses) },
+                            onNavigateToHorsery = { backStack.add(Horsery) },
+                            onNavigateToParameters = { backStack.add(Parameters) }
+                        )
                     }
 
                     is HomeAsTeacher -> NavEntry(key) {
                         HomeAsTeacher()
 
+                    }
+
+                    is Profile -> NavEntry(key) {
+                        Scaffold { Text("Profile Screen", modifier = Modifier.padding(it)) }
+                    }
+
+                    is Courses -> NavEntry(key) {
+                        Scaffold { Text("Courses Screen", modifier = Modifier.padding(it)) }
+                    }
+
+                    is Horses -> NavEntry(key) {
+                        Scaffold { Text("Horses Screen", modifier = Modifier.padding(it)) }
+                    }
+
+                    is Horsery -> NavEntry(key) {
+                        Scaffold { Text("Horsery Screen", modifier = Modifier.padding(it)) }
+                    }
+
+                    is Parameters -> NavEntry(key) {
+                        Scaffold { Text("Parameters Screen", modifier = Modifier.padding(it)) }
                     }
                     else -> NavEntry(Unit) {
 
