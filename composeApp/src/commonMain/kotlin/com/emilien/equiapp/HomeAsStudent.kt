@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
@@ -29,6 +30,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeAsStudent(
+    horseryName: String = "Galop des Allinges",
     onNavigateToProfile: () -> Unit = {},
     onNavigateToCourses: () -> Unit = {},
     onNavigateToHorses: () -> Unit = {},
@@ -40,7 +42,7 @@ fun HomeAsStudent(
             CenterAlignedTopAppBar(
                 title = { 
                     Text(
-                        "EQUIPAPP", 
+                        horseryName.uppercase(),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 2.sp
@@ -69,7 +71,7 @@ fun HomeAsStudent(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
@@ -234,7 +236,7 @@ fun QuickActionsRow() {
             modifier = Modifier.weight(1f)
         )
         QuickActionItem(
-            icon = Icons.Default.Chat,
+            icon = Icons.AutoMirrored.Filled.Chat,
             label = "Message",
             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
