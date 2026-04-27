@@ -1,4 +1,4 @@
-package com.emilien.equiapp
+package com.emilien.equiapp.coursedetail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,16 +17,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.emilien.equiapp.EquiAppTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseDetailScreen(
     courseId: String,
+    viewModel: CourseDetailViewModel = viewModel { CourseDetailViewModel() },
     onBack: () -> Unit = {}
 ) {
-    var presenceConfirmed by remember { mutableStateOf<Boolean?>(null) }
-    var comment by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(courseId) {
+        viewModel.onEvent(CourseDetailUiEvent.LoadCourse(courseId))
+    }
 
     Scaffold(
         topBar = {
@@ -40,52 +47,62 @@ fun CourseDetailScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            // Main Info
-            item {
-                CourseHeader(
-                    theme = "Jumping Level 2",
-                    teacher = "Jean-Pierre",
-                    horse = "Thunder",
-                    time = "Tomorrow, 10:00 - 11:30"
-                )
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-
-            // Payment & Credits
-            item {
-                PaymentStatusCard(
-                    status = "Paid (Annual)",
-                    credits = 1
-                )
+        } else if (uiState.error != null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // Main Info
+                item {
+                    CourseHeader(
+                        theme = uiState.theme,
+                        teacher = uiState.teacher,
+                        horse = uiState.horse,
+                        time = uiState.time
+                    )
+                }
 
-            // Presence Confirmation
-            item {
-                PresenceConfirmationSection(
-                    confirmed = presenceConfirmed,
-                    comment = comment,
-                    onConfirm = { presenceConfirmed = it },
-                    onCommentChange = { comment = it }
-                )
-            }
+                // Payment & Credits
+                item {
+                    PaymentStatusCard(
+                        status = uiState.paymentStatus,
+                        credits = uiState.credits
+                    )
+                }
 
-            // Other Students
-            item {
-                Text(
-                    "Group Members",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                // Presence Confirmation
+                item {
+                    PresenceConfirmationSection(
+                        confirmed = uiState.presenceConfirmed,
+                        comment = uiState.comment,
+                        onConfirm = { viewModel.onEvent(CourseDetailUiEvent.ConfirmPresence(it)) },
+                        onCommentChange = { viewModel.onEvent(CourseDetailUiEvent.UpdateComment(it)) }
+                    )
+                }
 
-            items(mockStudents) { student ->
-                StudentPresenceRow(student)
+                // Other Students
+                item {
+                    Text(
+                        "Group Members",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                items(uiState.otherStudents) { student ->
+                    StudentPresenceRow(student)
+                }
             }
         }
     }
@@ -120,7 +137,9 @@ fun InfoRow(icon: ImageVector, text: String) {
 fun PaymentStatusCard(status: String, credits: Int) {
     OutlinedCard(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -212,15 +231,6 @@ fun StudentPresenceRow(student: StudentMock) {
         }
     }
 }
-
-data class StudentMock(val name: String, val horse: String?, val status: String)
-
-val mockStudents = listOf(
-    StudentMock("Alice", "Spirit", "Present"),
-    StudentMock("Bob", "Daisy", "Present"),
-    StudentMock("Charlie", null, "Absent"),
-    StudentMock("Diana", "Goldie", "Unknown")
-)
 
 @Preview
 @Composable

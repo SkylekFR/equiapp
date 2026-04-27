@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
+import com.emilien.equiapp.coursedetail.CourseDetailScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
