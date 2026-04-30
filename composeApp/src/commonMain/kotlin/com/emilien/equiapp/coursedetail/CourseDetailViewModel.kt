@@ -2,13 +2,18 @@ package com.emilien.equiapp.coursedetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emilien.equiapp.data.CourseRepository
+import com.emilien.equiapp.data.MockCourseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class CourseDetailViewModel : ViewModel() {
+class CourseDetailViewModel(
+    private val repository: CourseRepository = MockCourseRepository()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CourseDetailUiState())
     val uiState: StateFlow<CourseDetailUiState> = _uiState.asStateFlow()
@@ -16,42 +21,34 @@ class CourseDetailViewModel : ViewModel() {
     fun onEvent(event: CourseDetailUiEvent) {
         when (event) {
             is CourseDetailUiEvent.LoadCourse -> loadCourse(event.courseId)
-            is CourseDetailUiEvent.ConfirmPresence -> {
-                _uiState.update { it.copy(presenceConfirmed = event.confirmed) }
-            }
-            is CourseDetailUiEvent.UpdateComment -> {
-                _uiState.update { it.copy(comment = event.comment) }
-            }
+            else -> {} // Presence events handled by PresenceViewModel
         }
     }
 
     private fun loadCourse(courseId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                // Mock loading based on ID
-                val mockStudents = listOf(
-                    StudentMock("Alice", "Spirit", "Present"),
-                    StudentMock("Bob", "Daisy", "Present"),
-                    StudentMock("Charlie", null, "Absent"),
-                    StudentMock("Diana", "Goldie", "Unknown")
-                )
-
-                _uiState.update {
-                    it.copy(
-                        courseId = courseId,
-                        theme = if (courseId == "1") "Jumping Level 2" else "Basic Dressage",
-                        teacher = "Jean-Pierre",
-                        horse = if (courseId == "1") "Thunder" else "Cloud",
-                        time = if (courseId == "1") "Tomorrow, 10:00 - 11:30" else "Wed, 14:00 - 15:30",
-                        paymentStatus = "Paid (Annual)",
-                        credits = 1,
-                        otherStudents = mockStudents,
-                        isLoading = false
-                    )
+            repository.getCourse(courseId).collectLatest { course ->
+                if (course != null) {
+                    _uiState.update {
+                        it.copy(
+                            courseId = course.id,
+                            theme = course.theme,
+                            teacher = course.teacher,
+                            horse = course.horse,
+                            time = course.time,
+                            courseStartTimeMillis = course.startTimeMillis,
+                            paymentStatus = course.paymentStatus,
+                            credits = course.credits,
+                            otherStudents = course.students,
+                            presenceConfirmed = course.presenceConfirmed,
+                            comment = course.comment,
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, error = "Course not found") }
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Failed to load course details") }
             }
         }
     }

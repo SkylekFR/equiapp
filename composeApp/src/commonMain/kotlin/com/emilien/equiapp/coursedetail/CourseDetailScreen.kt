@@ -18,21 +18,31 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.emilien.equiapp.EquiAppTheme
+import com.emilien.equiapp.domain.CourseStudent
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseDetailScreen(
     courseId: String,
-    viewModel: CourseDetailViewModel = viewModel { CourseDetailViewModel() },
+    viewModel: CourseDetailViewModel = koinViewModel(),
+    presenceViewModel: PresenceViewModel = koinViewModel(parameters = { parametersOf(courseId) }),
     onBack: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val presenceState by presenceViewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(courseId) {
         viewModel.onEvent(CourseDetailUiEvent.LoadCourse(courseId))
+    }
+
+    LaunchedEffect(uiState.courseId) {
+        if (uiState.courseId.isNotEmpty()) {
+            presenceViewModel.onIntent(PresenceIntent.Initialize(uiState.presenceConfirmed, uiState.comment))
+        }
     }
 
     Scaffold(
@@ -84,10 +94,9 @@ fun CourseDetailScreen(
                 // Presence Confirmation
                 item {
                     PresenceConfirmationSection(
-                        confirmed = uiState.presenceConfirmed,
-                        comment = uiState.comment,
-                        onConfirm = { viewModel.onEvent(CourseDetailUiEvent.ConfirmPresence(it)) },
-                        onCommentChange = { viewModel.onEvent(CourseDetailUiEvent.UpdateComment(it)) }
+                        state = presenceState,
+                        courseStartTimeMillis = uiState.courseStartTimeMillis,
+                        onIntent = { presenceViewModel.onIntent(it) }
                     )
                 }
 
@@ -165,37 +174,55 @@ fun PaymentStatusCard(status: String, credits: Int) {
 
 @Composable
 fun PresenceConfirmationSection(
-    confirmed: Boolean?,
-    comment: String,
-    onConfirm: (Boolean) -> Unit,
-    onCommentChange: (String) -> Unit
+    state: PresenceUiState,
+    courseStartTimeMillis: Long,
+    onIntent: (PresenceIntent) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Your Presence", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        
+        if (state.error != null) {
+            Text(
+                text = state.error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
-                onClick = { onConfirm(true) },
+                onClick = { onIntent(PresenceIntent.SubmitPresence(true, courseStartTimeMillis)) },
                 modifier = Modifier.weight(1f),
+                enabled = !state.isOptimistic,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (confirmed == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = if (confirmed == true) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    containerColor = if (state.isConfirmed == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (state.isConfirmed == true) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
+                if (state.isOptimistic && state.isConfirmed == true) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                    Spacer(Modifier.width(8.dp))
+                }
                 Text("Confirm")
             }
             OutlinedButton(
-                onClick = { onConfirm(false) },
+                onClick = { onIntent(PresenceIntent.SubmitPresence(false, courseStartTimeMillis)) },
                 modifier = Modifier.weight(1f),
+                enabled = !state.isOptimistic,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = if (confirmed == false) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
+                    contentColor = if (state.isConfirmed == false) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
+                if (state.isOptimistic && state.isConfirmed == false) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.Red)
+                    Spacer(Modifier.width(8.dp))
+                }
                 Text("Absence")
             }
         }
         OutlinedTextField(
-            value = comment,
-            onValueChange = onCommentChange,
+            value = state.comment,
+            onValueChange = { onIntent(PresenceIntent.UpdateComment(it)) },
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Add a comment (optional)") },
             placeholder = { Text("I might be 5 min late...") }
@@ -204,7 +231,7 @@ fun PresenceConfirmationSection(
 }
 
 @Composable
-fun StudentPresenceRow(student: StudentMock) {
+fun StudentPresenceRow(student: CourseStudent) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
