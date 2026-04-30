@@ -57,6 +57,7 @@ kotlin {
             implementation(libs.koin.navigation3)
 
             implementation(projects.shared)
+            implementation(projects.network)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
