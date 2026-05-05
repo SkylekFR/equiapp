@@ -24,6 +24,11 @@ This document outlines the mandatory architectural patterns and principles to be
 - **Use Cases** must be **platform agnostic** (reside in `commonMain`).
 - Each Use Case should perform a single business operation.
 - Use Cases must return a **Custom Result class** (see section 9).
+- Business logic should live in domain and use cases.
+  - Avoid for example checking if a string contains "jumping" in the viewModel or Compose and then change the icon.  
+  - This business logic should be implemetend in use case, and the differenciation should be based on class modelization.
+  - Maybe domain should hold a CourseType, or CourseTrend enum that the UI could use to change icon, or text, or color.
+  - By this way, we decoupled icon or color from logic
 
 ## 6. Repository Pattern
 - Repository **interfaces** must reside in the **Domain** layer.
@@ -67,3 +72,17 @@ This document outlines the mandatory architectural patterns and principles to be
       data object Unknown : AppError
   }
   ```
+
+## 10. Modularization
+- The project follows a **Screaming Architecture** using a modular structure organized by features and core capabilities.
+- **Feature Modules**:
+  - Organized by business domain (e.g., `:feature:auth`, `:feature:courses`).
+  - Encapsulate the feature's Presentation, Domain, and Data layers.
+  - Should remain independent of other feature modules to ensure low coupling.
+- **Core Modules**:
+  - Provide shared infrastructure and horizontal utilities (e.g., `:network`, `:core:designsystem`, `:core:database`).
+  - Feature modules depend on Core modules to access shared services.
+- **App Module** (`:composeApp`):
+  - Serves as the orchestrator and entry point.
+  - Responsible for dependency injection graph assembly and top-level navigation.
+  - Aggregates all feature and core modules.
