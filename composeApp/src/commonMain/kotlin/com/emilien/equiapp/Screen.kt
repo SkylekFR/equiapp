@@ -1,5 +1,6 @@
 package com.emilien.equiapp
 
+data object Splash
 data object Login
 data object HomeAsStudent
 data object HomeAsTeacher

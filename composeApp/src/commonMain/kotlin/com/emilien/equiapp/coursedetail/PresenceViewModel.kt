@@ -2,7 +2,8 @@ package com.emilien.equiapp.coursedetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emilien.equiapp.data.MockCourseRepository
+import com.emilien.equiapp.domain.AppResult
+import com.emilien.equiapp.domain.course.CourseError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class PresenceViewModel(
     private val courseId: String,
-    private val declarePresenceUseCase: DeclarePresenceUseCase = DeclarePresenceUseCase(MockCourseRepository())
+    private val declarePresenceUseCase: DeclarePresenceUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PresenceUiState())
@@ -51,17 +52,24 @@ class PresenceViewModel(
                 currentTimeMillis = mockCurrentTimeMillis
             )
 
-            if (result.isFailure) {
-                // Rollback on failure
-                _uiState.update { 
-                    it.copy(
-                        isConfirmed = previousPresence,
-                        error = result.exceptionOrNull()?.message,
-                        isOptimistic = false
-                    )
+            when (result) {
+                is AppResult.Failure -> {
+                    // Rollback on failure
+                    val errorMessage = when (result.error) {
+                        is CourseError.Business.AccessDenied -> "Absence must be declared at least 24h before. Fees may apply."
+                        else -> "Failed to update presence"
+                    }
+                    _uiState.update { 
+                        it.copy(
+                            isConfirmed = previousPresence,
+                            error = errorMessage,
+                            isOptimistic = false
+                        )
+                    }
                 }
-            } else {
-                _uiState.update { it.copy(isOptimistic = false) }
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(isOptimistic = false) }
+                }
             }
         }
     }

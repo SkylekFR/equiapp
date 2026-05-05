@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.emilien.equiapp.coursedetail.CourseDetailScreen
 import com.emilien.equiapp.di.appModule
+import com.emilien.equiapp.di.sharedModule
 import com.emilien.equiapp.network.di.networkModule
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.KoinApplication
@@ -20,11 +21,11 @@ import org.koin.compose.KoinApplication
 fun App() {
     KoinApplication(
         application = {
-            modules(appModule, networkModule)
+            modules(appModule, networkModule, sharedModule)
         }
     ) {
         EquiAppTheme {
-            val backStack = remember { mutableStateListOf<Any>(Login) }
+            val backStack = remember { mutableStateListOf<Any>(Splash) }
             NavDisplay(
                 backStack = backStack,
                 onBack = {
@@ -32,13 +33,25 @@ fun App() {
                 },
                 entryProvider = { key ->
                     when (key) {
+                        is Splash -> NavEntry(key) {
+                            SplashScreen(
+                                onNavigateToLogin = {
+                                    backStack.clear()
+                                    backStack.add(Login)
+                                },
+                                onNavigateToHome = {
+                                    backStack.clear()
+                                    backStack.add(HomeAsStudent)
+                                }
+                            )
+                        }
+
                         is Login -> NavEntry(key) {
                             LoginScreen(
-                                onClickLoginAsStudent = {
+                                onLoginSuccess = {
+                                    // For now, assume student. Role check should be added later.
+                                    backStack.clear()
                                     backStack.add(HomeAsStudent)
-                                },
-                                onClickLoginAsTeacher = {
-                                    backStack.add(HomeAsTeacher)
                                 }
                             )
                         }

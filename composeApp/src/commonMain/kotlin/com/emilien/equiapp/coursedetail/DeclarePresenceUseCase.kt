@@ -1,6 +1,8 @@
 package com.emilien.equiapp.coursedetail
 
-import com.emilien.equiapp.data.CourseRepository
+import com.emilien.equiapp.domain.AppResult
+import com.emilien.equiapp.domain.course.CourseError
+import com.emilien.equiapp.domain.course.CourseRepository
 
 class DeclarePresenceUseCase(
     private val repository: CourseRepository
@@ -11,11 +13,12 @@ class DeclarePresenceUseCase(
         comment: String,
         courseStartTimeMillis: Long,
         currentTimeMillis: Long
-    ): Result<Unit> {
+    ): AppResult<Unit, CourseError> {
         if (!isPresent) {
             val twentyFourHoursInMillis = 24 * 60 * 60 * 1000L
             if (courseStartTimeMillis - currentTimeMillis < twentyFourHoursInMillis) {
-                return Result.failure(Exception("Absence must be declared at least 24h before. Fees may apply."))
+                // Return a specific business error
+                return AppResult.Failure(CourseError.Business.AccessDenied)
             }
         }
         return repository.updatePresence(courseId, isPresent, comment)

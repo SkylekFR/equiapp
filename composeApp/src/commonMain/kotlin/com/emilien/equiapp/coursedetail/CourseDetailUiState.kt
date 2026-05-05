@@ -1,6 +1,6 @@
 package com.emilien.equiapp.coursedetail
 
-import com.emilien.equiapp.domain.CourseStudent
+import com.emilien.equiapp.domain.course.CourseStudent
 
 data class CourseDetailUiState(
     val courseId: String = "",

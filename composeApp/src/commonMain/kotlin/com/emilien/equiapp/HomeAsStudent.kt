@@ -32,14 +32,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.emilien.equiapp.home.NewsViewModel
+import com.emilien.equiapp.home.UpcomingCoursesUiEvent
 import com.emilien.equiapp.home.UpcomingCoursesViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeAsStudent(
     horseryName: String = "Galop des Allinges",
     newsViewModel: NewsViewModel = viewModel { NewsViewModel() },
-    coursesViewModel: UpcomingCoursesViewModel = viewModel { UpcomingCoursesViewModel() },
+    coursesViewModel: UpcomingCoursesViewModel = koinViewModel(),
     onNavigateToProfile: () -> Unit = {},
     onNavigateToCourses: () -> Unit = {},
     onNavigateToHorses: () -> Unit = {},
@@ -165,7 +167,15 @@ fun HomeAsStudent(
                         CircularProgressIndicator(modifier = Modifier.padding(horizontal = 16.dp))
                     } else if (coursesUiState.error != null) {
                         Text(coursesUiState.error!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp))
-                    } else {
+                    }
+                    else if (coursesUiState.courses.isEmpty()) {
+                        Button(onClick = {
+                        coursesViewModel.onEvent(UpcomingCoursesUiEvent.RefreshCourses)
+
+                        }) {
+                            Text("Pas de cours trouvé, recharger")
+                        }
+                    }else {
                         NextCoursesList(
                             courses = coursesUiState.courses,
                             onCourseClick = onNavigateToCourseDetail

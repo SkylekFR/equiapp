@@ -2,8 +2,7 @@ package com.emilien.equiapp.coursedetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emilien.equiapp.data.CourseRepository
-import com.emilien.equiapp.data.MockCourseRepository
+import com.emilien.equiapp.domain.course.CourseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CourseDetailViewModel(
-    private val repository: CourseRepository = MockCourseRepository()
+    private val repository: CourseRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CourseDetailUiState())
@@ -33,7 +32,7 @@ class CourseDetailViewModel(
                     _uiState.update {
                         it.copy(
                             courseId = course.id,
-                            theme = course.theme,
+                            theme = course.theme ?: "",
                             teacher = course.teacher,
                             horse = course.horse,
                             time = course.time,
