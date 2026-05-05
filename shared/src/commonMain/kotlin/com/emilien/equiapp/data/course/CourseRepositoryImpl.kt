@@ -1,0 +1,62 @@
+package com.emilien.equiapp.data.course
+
+import com.emilien.equiapp.domain.AppResult
+import com.emilien.equiapp.domain.course.*
+import com.emilien.equiapp.network.CourseRemoteDataSource
+import com.emilien.equiapp.network.model.CourseDto
+import com.emilien.equiapp.network.model.StudentDto
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+
+class CourseRepositoryImpl(
+    private val dataSource: CourseRemoteDataSource
+) : CourseRepository {
+
+    override fun getCourse(courseId: String): Flow<Course?> = flow {
+        // Simple implementation, could be improved with local cache
+        val courses = dataSource.getCourses()
+        emit(courses.find { it.id == courseId }?.toDomain())
+    }
+
+    override suspend fun getCourses(): AppResult<List<Course>, CourseError> {
+        return try {
+            val dtos = dataSource.getCourses()
+            AppResult.Success(dtos.map { it.toDomain() })
+        } catch (e: Exception) {
+            AppResult.Failure(CourseError.Network.ServerError)
+        }
+    }
+
+    override suspend fun updatePresence(
+        courseId: String,
+        isPresent: Boolean,
+        comment: String
+    ): AppResult<Unit, CourseError> {
+        return try {
+            dataSource.updatePresence(courseId, isPresent, comment)
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Failure(CourseError.Network.ServerError)
+        }
+    }
+
+    private fun CourseDto.toDomain(): Course = Course(
+        id = id,
+        theme = title,
+        teacher = teacher,
+        horse = "",
+        time = "",
+        startTimeMillis = 1000,
+        paymentStatus = "",
+        credits = 2,
+        students = emptyList(),
+        presenceConfirmed = false,
+        comment = ""
+    )
+
+    private fun StudentDto.toDomain(): CourseStudent = CourseStudent(
+        name = name,
+        horse = horse,
+        status = status
+    )
+}

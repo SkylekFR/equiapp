@@ -1,7 +1,7 @@
 package com.emilien.equiapp.data
 
-import com.emilien.equiapp.domain.Course
-import com.emilien.equiapp.domain.CourseStudent
+import com.emilien.equiapp.domain.AppResult
+import com.emilien.equiapp.domain.course.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,7 +49,12 @@ class MockCourseRepository : CourseRepository {
         return courses.map { list -> list.find { it.id == courseId } }
     }
 
-    override suspend fun updatePresence(courseId: String, isPresent: Boolean, comment: String): Result<Unit> {
+    override suspend fun getCourses(): AppResult<List<Course>, CourseError> {
+        delay(800)
+        return AppResult.Success(courses.value)
+    }
+
+    override suspend fun updatePresence(courseId: String, isPresent: Boolean, comment: String): AppResult<Unit, CourseError> {
         delay(1000) // Simulate network
         courses.update { list ->
             list.map { course ->
@@ -60,6 +65,6 @@ class MockCourseRepository : CourseRepository {
                 }
             }
         }
-        return Result.success(Unit)
+        return AppResult.Success(Unit)
     }
 }
