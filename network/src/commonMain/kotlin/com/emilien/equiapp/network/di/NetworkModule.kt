@@ -1,36 +1,49 @@
 package com.emilien.equiapp.network.di
 
-import io.ktor.client.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.json.Json
+import com.emilien.equiapp.network.BuildConfig
+import com.emilien.equiapp.network.AuthRemoteDataSource
+import com.emilien.equiapp.network.CourseRemoteDataSource
+import com.emilien.equiapp.network.SupabaseAuthRemoteDataSource
+import com.emilien.equiapp.network.SupabaseCourseRemoteDataSource
+import com.russhwolf.settings.Settings
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.logging.LogLevel
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.postgrest
 import org.koin.dsl.module
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 val networkModule = module {
     single {
-        HttpClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    ignoreUnknownKeys = true
-                    prettyPrint = true
-                    isLenient = true
-                })
-            }
-            install(Logging) {
-                logger = Logger.DEFAULT
-                level = LogLevel.ALL
-            }
-            defaultRequest {
-                url("https://zcqfjrtgzxkpjgqlhxre.supabase.co/rest/v1/")
-                header("Content-Type", "application/json")
-                // apiKey and bearer token should usually be injected or provided via a plugin
-                // header("apikey", "SUPABASE_KEY")
-                // header("Authorization", "Bearer SUPABASE_KEY")
-            }
+        createSupabaseClient(
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_KEY
+        ) {
+            defaultLogLevel = LogLevel.DEBUG
+            requestTimeout = 30.seconds
+            install(Auth)
+            install(Postgrest)
         }
+    }
+
+    single { get<SupabaseClient>().auth }
+    single { get<SupabaseClient>().postgrest }
+    
+    single { Settings() }
+    
+    single<AuthRemoteDataSource> { 
+        SupabaseAuthRemoteDataSource(
+            auth = get()
+        )
+    }
+
+    single<CourseRemoteDataSource> {
+        SupabaseCourseRemoteDataSource(
+            postgrest = get()
+        )
     }
 }
