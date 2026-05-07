@@ -12,11 +12,11 @@ class SupabaseCourseRemoteDataSource(
     private val postgrest: Postgrest
 ) : CourseRemoteDataSource {
     override suspend fun getCourses(): List<CourseDto> {
-        return postgrest.from("course").select().decodeList<CourseDto>()
+        return postgrest.from("cours").select().decodeList<CourseDto>()
     }
 
     override suspend fun updatePresence(courseId: String, isPresent: Boolean, comment: String) {
-        postgrest.from("course").update(
+        postgrest.from("cours").update(
             {
                 set("presence_confirmed", isPresent)
                 set("comment", comment)

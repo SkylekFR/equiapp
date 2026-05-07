@@ -6,8 +6,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CourseDto(
     @SerialName("id") val id: String,
-    @SerialName("title") val title: String?,
-    @SerialName("teacher") val teacher: String,
+    @SerialName("titre") val title: String?,
+    @SerialName("moniteur_id") val teacher: String,
 )
 
 @Serializable
