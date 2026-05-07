@@ -4,7 +4,7 @@ import com.emilien.equiapp.domain.AppResult
 import com.emilien.equiapp.domain.course.*
 import com.emilien.equiapp.network.CourseRemoteDataSource
 import com.emilien.equiapp.network.model.CourseDto
-import com.emilien.equiapp.network.model.StudentDto
+import com.emilien.equiapp.network.model.ParticipationDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -23,6 +23,7 @@ class CourseRepositoryImpl(
             val dtos = dataSource.getCourses()
             AppResult.Success(dtos.map { it.toDomain() })
         } catch (e: Exception) {
+            e.printStackTrace()
             AppResult.Failure(CourseError.Network.ServerError)
         }
     }
@@ -43,20 +44,20 @@ class CourseRepositoryImpl(
     private fun CourseDto.toDomain(): Course = Course(
         id = id,
         theme = title,
-        teacher = teacher,
-        horse = "",
-        time = "",
-        startTimeMillis = 1000,
+        teacher = teacherId,
+        horse = "", // Could be derived from first participation or similar if needed
+        time = "", // Should be fetched from DB
+        startTimeMillis = 1000, // Should be fetched from DB
         paymentStatus = "",
         credits = 2,
-        students = emptyList(),
+        students = participations.map { it.toDomain() },
         presenceConfirmed = false,
         comment = ""
     )
 
-    private fun StudentDto.toDomain(): CourseStudent = CourseStudent(
-        name = name,
-        horse = horse,
-        status = status
+    private fun ParticipationDto.toDomain(): CourseStudent = CourseStudent(
+        name = student?.fullName ?: "Unknown Student",
+        horse = horse?.name,
+        status = presenceStatus
     )
 }

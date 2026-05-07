@@ -2,6 +2,7 @@ package com.emilien.equiapp.network
 
 import com.emilien.equiapp.network.model.CourseDto
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 
 interface CourseRemoteDataSource {
     suspend fun getCourses(): List<CourseDto>
@@ -12,7 +13,9 @@ class SupabaseCourseRemoteDataSource(
     private val postgrest: Postgrest
 ) : CourseRemoteDataSource {
     override suspend fun getCourses(): List<CourseDto> {
-        return postgrest.from("cours").select().decodeList<CourseDto>()
+        return postgrest.from("cours")
+            .select(columns = Columns.raw("*, participation(*, profiles(*), cheval(*))"))
+            .decodeList<CourseDto>()
     }
 
     override suspend fun updatePresence(courseId: String, isPresent: Boolean, comment: String) {
