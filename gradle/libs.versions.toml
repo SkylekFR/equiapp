@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.2"
+agp = "9.2.1"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
@@ -22,7 +22,7 @@ serialization = "1.11.0"
 
 koin = "4.2.1"
 navigation3 = "1.1.1"
-navigation3Jetbrains = "1.1.0"
+navigation3Jetbrains = "1.1.1"
 navigation3ViewModel = "2.10.0"
 supabase = "3.6.0"
 buildconfig = "6.0.9"
