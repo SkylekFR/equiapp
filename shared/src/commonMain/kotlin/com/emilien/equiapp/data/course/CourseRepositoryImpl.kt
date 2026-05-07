@@ -4,7 +4,6 @@ import com.emilien.equiapp.domain.AppResult
 import com.emilien.equiapp.domain.course.*
 import com.emilien.equiapp.network.CourseRemoteDataSource
 import com.emilien.equiapp.network.model.CourseDto
-import com.emilien.equiapp.network.model.ParticipationDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -13,18 +12,20 @@ class CourseRepositoryImpl(
 ) : CourseRepository {
 
     override fun getCourse(courseId: String): Flow<Course?> = flow {
-        // Simple implementation, could be improved with local cache
-        val courses = dataSource.getCourses()
-        emit(courses.find { it.id == courseId }?.toDomain())
+        try {
+            val courses = dataSource.getCourses()
+            emit(courses.find { it.id == courseId }?.toDomain())
+        } catch (e: Exception) {
+            emit(null)
+        }
     }
 
-    override suspend fun getCourses(): AppResult<List<Course>, CourseError> {
-        return try {
+    override fun getCourses(): Flow<AppResult<List<Course>, CourseError>> = flow {
+        try {
             val dtos = dataSource.getCourses()
-            AppResult.Success(dtos.map { it.toDomain() })
+            emit(AppResult.Success(dtos.map { it.toDomain() }))
         } catch (e: Exception) {
-            e.printStackTrace()
-            AppResult.Failure(CourseError.Network.ServerError)
+            emit(AppResult.Failure(CourseError.Network.ServerError))
         }
     }
 
@@ -45,19 +46,12 @@ class CourseRepositoryImpl(
         id = id,
         theme = title,
         teacher = teacherId,
-        horse = "", // Could be derived from first participation or similar if needed
-        time = "", // Should be fetched from DB
-        startTimeMillis = 1000, // Should be fetched from DB
+        horse = "", 
+        time = "", 
+        startTimeMillis = 1000, 
         paymentStatus = "",
         credits = 2,
-        students = participations.map { it.toDomain() },
-        presenceConfirmed = false,
+        students = emptyList(),
         comment = ""
-    )
-
-    private fun ParticipationDto.toDomain(): CourseStudent = CourseStudent(
-        name = student?.fullName ?: "Unknown Student",
-        horse = horse?.name,
-        status = presenceStatus
     )
 }

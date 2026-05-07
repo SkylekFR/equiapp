@@ -40,7 +40,6 @@ class CourseDetailViewModel(
                             paymentStatus = course.paymentStatus,
                             credits = course.credits,
                             otherStudents = course.students,
-                            presenceConfirmed = course.presenceConfirmed,
                             comment = course.comment,
                             isLoading = false
                         )

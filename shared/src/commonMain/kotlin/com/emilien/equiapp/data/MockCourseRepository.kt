@@ -3,10 +3,7 @@ package com.emilien.equiapp.data
 import com.emilien.equiapp.domain.AppResult
 import com.emilien.equiapp.domain.course.*
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 
 class MockCourseRepository : CourseRepository {
 
@@ -49,9 +46,11 @@ class MockCourseRepository : CourseRepository {
         return courses.map { list -> list.find { it.id == courseId } }
     }
 
-    override suspend fun getCourses(): AppResult<List<Course>, CourseError> {
-        delay(800)
-        return AppResult.Success(courses.value)
+    override fun getCourses(): Flow<AppResult<List<Course>, CourseError>> {
+        return flow {
+            delay(800)
+            emit(AppResult.Success(courses.value))
+        }
     }
 
     override suspend fun updatePresence(courseId: String, isPresent: Boolean, comment: String): AppResult<Unit, CourseError> {
@@ -59,7 +58,7 @@ class MockCourseRepository : CourseRepository {
         courses.update { list ->
             list.map { course ->
                 if (course.id == courseId) {
-                    course.copy(presenceConfirmed = isPresent, comment = comment)
+                    course.copy(comment = comment)
                 } else {
                     course
                 }

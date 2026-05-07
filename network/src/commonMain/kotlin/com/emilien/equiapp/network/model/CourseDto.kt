@@ -15,8 +15,6 @@ data class CourseDto(
 data class ParticipationDto(
     @SerialName("id") val id: String,
     @SerialName("statut_presence") val presenceStatus: String,
-    @SerialName("profiles") val student: ProfileDto? = null,
-    @SerialName("cheval") val horse: HorseDto? = null
 )
 
 @Serializable

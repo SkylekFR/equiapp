@@ -157,7 +157,9 @@ fun HomeAsStudent(
                         Box(modifier = Modifier.padding(it)) {
                             SectionHeader(
                                 title = "Upcoming Courses",
-                                onSeeAllClick = onNavigateToCourses,
+                                onSeeAllClick = {
+                                    coursesViewModel.onEvent(UpcomingCoursesUiEvent.RefreshCourses)
+                                },
                                 icon = Icons.AutoMirrored.Filled.KeyboardArrowRight
                             )
                         }
@@ -342,7 +344,7 @@ fun SectionHeader(title: String, onSeeAllClick: () -> Unit, icon: ImageVector) {
 
 @Composable
 fun NextCoursesList(
-    courses: List<CourseMock>,
+    courses: List<CourseUiModel>,
     onCourseClick: (String) -> Unit = {}
 ) {
     LazyRow(
@@ -371,6 +373,31 @@ fun NextCoursesList(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(course.icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                        }
+
+                        // Participation Count
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            shape = CircleShape
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Groups,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "${course.presenceCount}/${course.totalPotentialCount}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -471,7 +498,15 @@ fun NewsFeed(news: List<NewsMock>) {
     }
 }
 
-data class CourseMock(val id: String, val title: String, val time: String, val location: String, val icon: ImageVector)
+data class CourseUiModel(
+    val id: String,
+    val title: String,
+    val time: String,
+    val location: String,
+    val icon: ImageVector,
+    val presenceCount: Int,
+    val totalPotentialCount: Int
+)
 data class NewsMock(val title: String, val content: String, val date: String, val icon: ImageVector)
 
 @Preview

@@ -49,6 +49,7 @@ kotlin {
             implementation(libs.multiplatform.settings.no.arg)
             implementation(libs.supabase.auth)
             implementation(libs.supabase.postgrest)
+            implementation(libs.supabase.functions)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

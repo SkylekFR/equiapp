@@ -10,7 +10,6 @@ data class Course(
     val paymentStatus: String,
     val credits: Int,
     val students: List<CourseStudent>,
-    val presenceConfirmed: Boolean? = null,
     val comment: String = ""
 )
 

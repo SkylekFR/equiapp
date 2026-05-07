@@ -5,6 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface CourseRepository {
     fun getCourse(courseId: String): Flow<Course?>
-    suspend fun getCourses(): AppResult<List<Course>, CourseError>
+    fun getCourses(): Flow<AppResult<List<Course>, CourseError>>
     suspend fun updatePresence(courseId: String, isPresent: Boolean, comment: String): AppResult<Unit, CourseError>
 }

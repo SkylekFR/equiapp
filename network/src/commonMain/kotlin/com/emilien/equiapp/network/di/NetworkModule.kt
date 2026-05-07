@@ -32,7 +32,7 @@ val networkModule = module {
 
     single { get<SupabaseClient>().auth }
     single { get<SupabaseClient>().postgrest }
-    
+
     single { Settings() }
     
     single<AuthRemoteDataSource> { 
