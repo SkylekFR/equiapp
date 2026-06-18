@@ -60,6 +60,7 @@ fun HomeAsStudent(
                         horseryName.uppercase(),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black,
+                        color = Color.Red,
                         letterSpacing = 2.sp
                     ) 
                 },
